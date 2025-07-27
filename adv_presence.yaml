@@ -1,10 +1,9 @@
 blueprint:
-  name: Advanced Presence Control with MQTT Button and Configurable Notifications
+  name: Advanced Presence Control with MQTT Button
   description: >-
     Automates home/away modes based on a binary_sensor. Includes a guest mode 
     that activates an MQTT button (single press for home, hold for away). 
-    An input_boolean reflects the current state (on=Home, off=Away),
-    and a configurable service sends notifications.
+    An input_boolean reflects the current state (on=Home, off=Away).
   domain: automation
   source_url: https://github.com/wkethman/adv_presence/edit/main/adv_presence.yaml
   input:
@@ -26,11 +25,6 @@ blueprint:
       selector:
         entity:
           domain: input_boolean
-    notification_service:
-      name: Notification Service
-      description: The service to call for mode alerts (e.g., notify.mobile_app_your_phone).
-      selector:
-        service:
     mqtt_topic:
       name: MQTT Topic
       description: The MQTT topic your button publishes its state to.
