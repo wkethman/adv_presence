@@ -1,0 +1,128 @@
+blueprint:
+  name: Advanced Presence with MQTT Button (Delayed Hold)
+  description: >-
+    Automates home/away modes based on a person's presence.
+    Includes a guest mode that uses an MQTT button to confirm presence (single press)
+    or to trigger the away sequence (hold action). The away delay applies to both automatic
+    and manual (hold action) away triggers.
+  domain: automation
+  source_url: https://gist.github.com/your-github-username/your-gist-id-3
+  input:
+    person_entity:
+      name: Person
+      description: The primary person entity to track for presence.
+      selector:
+        entity:
+          domain: person
+    guest_mode_toggle:
+      name: Guest Mode Toggle
+      description: An input_boolean that enables or disables Guest Mode.
+      selector:
+        entity:
+          domain: input_boolean
+    mqtt_topic:
+      name: MQTT Topic
+      description: The MQTT topic your button publishes its state to.
+      selector:
+        text:
+    payload_click:
+      name: Payload for Single Press
+      description: The MQTT payload that signifies a single press/click.
+      default: "single"
+      selector:
+        text:
+    payload_hold:
+      name: Payload for Hold
+      description: The MQTT payload that signifies a hold action.
+      default: "hold"
+      selector:
+        text:
+    away_delay:
+      name: Away Delay
+      description: Time (in seconds) to wait before setting away mode. This applies to all away actions.
+      default: 120
+      selector:
+        number:
+          min: 0
+          max: 600
+          unit_of_measurement: seconds
+
+variables:
+  person_entity: !input person_entity
+  guest_mode: "{{ states(input('guest_mode_toggle')) == 'on' }}"
+  person_home: "{{ is_state(person_entity, 'home') }}"
+
+trigger:
+  # Trigger on person's location change
+  - platform: state
+    entity_id: !input person_entity
+    to:
+      - "home"
+      - "not_home"
+  # Trigger when guest mode is toggled
+  - platform: state
+    entity_id: !input guest_mode_toggle
+  # Trigger for MQTT button single press
+  - platform: mqtt
+    topic: !input mqtt_topic
+    payload: !input payload_click
+    id: "mqtt_click"
+  # Trigger for MQTT button hold
+  - platform: mqtt
+    topic: !input mqtt_topic
+    payload: !input payload_hold
+    id: "mqtt_hold"
+
+condition: []
+
+action:
+  - choose:
+      # OPTION 1: Force AWAY mode via MQTT hold action.
+      # This provides a manual override to start the delayed away sequence.
+      - conditions:
+          - condition: trigger
+            id: "mqtt_hold"
+        sequence:
+          - delay:
+              seconds: !input away_delay
+          - service: scene.turn_on
+            target:
+              entity_id: scene.away # ✈️ IMPORTANT: Change to your "Away" scene or script
+            data: {}
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: guest_mode_confirm
+
+      # OPTION 2: Set HOME mode.
+      # Happens if person arrives home OR guest confirmation (MQTT click) is received.
+      - conditions:
+          - "{{ person_home or (trigger.id == 'mqtt_click' and guest_mode) }}"
+        sequence:
+          - service: scene.turn_on
+            target:
+              entity_id: scene.home # 🏡 IMPORTANT: Change to your "Home" scene or script
+            data: {}
+          - service: persistent_notification.dismiss
+            data:
+              notification_id: guest_mode_confirm
+
+      # OPTION 3: Set AWAY mode automatically.
+      # Happens if the person is not home AND guest mode is off.
+      - conditions:
+          - "{{ not person_home and not guest_mode }}"
+        sequence:
+          - delay:
+              seconds: !input away_delay
+          - service: scene.turn_on
+            target:
+              entity_id: scene.away # ✈️ IMPORTANT: Change to your "Away" scene or script
+            data: {}
+
+      # OPTION 4 (Default): Person is away, but Guest Mode is ON.
+      # Ask for confirmation via notification.
+    default:
+      - service: persistent_notification.create
+        data:
+          message: Primary person has left, but Guest Mode is on. Single press the guest button to confirm presence or hold to set Away mode.
+          title: "Guest Mode Confirmation Required"
+          notification_id: guest_mode_confirm
