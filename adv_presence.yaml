@@ -64,8 +64,6 @@ trigger:
     to:
       - "on"
       - "off"
-  - platform: state
-    entity_id: !input guest_mode_toggle
   - platform: mqtt
     topic: !input mqtt_topic
     payload: !input payload_click
@@ -79,6 +77,7 @@ condition: []
 
 action:
   - choose:
+    
       # OPTION 1: Set AWAY mode (manual or automatic).
       - conditions:
           - condition: or
@@ -99,7 +98,7 @@ action:
               entity_id: !input home_mode_boolean
 
       # OPTION 2: Set HOME mode.
-      # Happens if sensor is 'on' OR if guest confirmation click is received WHILE guest mode is on.
+      # Happens if presence sensor is 'on' OR if guest confirmation click is received WHILE guest mode is on.
       - conditions:
           - "{{ is_home or (trigger.id == 'mqtt_click' and guest_mode) }}"
         sequence:
