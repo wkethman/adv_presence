@@ -43,15 +43,6 @@ blueprint:
       default: "hold"
       selector:
         text:
-    away_delay:
-      name: Away Delay
-      description: Time (in seconds) to wait before setting away mode. This applies to all away actions.
-      default: 120
-      selector:
-        number:
-          min: 0
-          max: 600
-          unit_of_measurement: seconds
 
 variables:
   home_mode_boolean: !input home_mode_boolean
@@ -91,8 +82,6 @@ action:
               # Condition B: Automatic away when sensor is off and guest mode is off.
               - "{{ not is_home and not guest_mode }}"
         sequence:
-          - delay:
-              seconds: !input away_delay
           - service: input_boolean.turn_off
             target:
               entity_id: !input home_mode_boolean
