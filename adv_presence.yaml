@@ -57,6 +57,11 @@ trigger:
     payload: !input payload_hold
     id: "mqtt_hold"
 
+variables:
+  guest_mode_toggle: !input guest_mode_toggle
+  presence_sensor: !input presence_sensor
+  timeOpenWorkVar: !input timeOpenWork
+  
 condition: []
 
 action:
@@ -71,7 +76,7 @@ action:
                   - condition: trigger
                     id: "mqtt_hold"
                   - condition: template
-                    value_template: "{{ is_state(!input guest_mode_toggle, 'on') }}"
+                    value_template: "{{ is_state(guest_mode_toggle, 'on') }}"
 
               # Condition B: Automatic away when sensor is OFF and guest mode is OFF.
               - condition: and
@@ -79,7 +84,7 @@ action:
                   - condition: template
                     value_template: "{{ is_state(!input presence_sensor, 'off') }}"
                   - condition: template
-                    value_template: "{{ is_state(!input guest_mode_toggle, 'off') }}"
+                    value_template: "{{ is_state(guest_mode_toggle, 'off') }}"
         sequence:
           - service: input_boolean.turn_off
             target:
@@ -89,7 +94,7 @@ action:
       # Happens if presence sensor is ON OR if a manual CLICK happens while guest mode is ON.
       - conditions:
           - condition: template
-            value_template: "{{ is_state(!input presence_sensor, 'on') or (trigger.id == 'mqtt_click' and is_state(!input guest_mode_toggle, 'on')) }}"
+            value_template: "{{ is_state(presence_sensor, 'on') or (trigger.id == 'mqtt_click' and is_state(guest_mode_toggle, 'on')) }}"
         sequence:
           - service: input_boolean.turn_on
             target:
