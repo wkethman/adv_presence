@@ -60,7 +60,6 @@ trigger:
 variables:
   guest_mode_toggle: !input guest_mode_toggle
   presence_sensor: !input presence_sensor
-  timeOpenWorkVar: !input timeOpenWork
   
 condition: []
 
