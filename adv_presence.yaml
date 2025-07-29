@@ -6,6 +6,7 @@ blueprint:
     that activates an MQTT button (single press for home, hold for away). 
     An input_boolean reflects the current state (on=Home, off=Away).
   domain: automation
+  mode: single
   input:
     presence_sensor:
       name: Presence Sensor
@@ -44,48 +45,56 @@ blueprint:
       selector:
         text:
 
-variables:
-  home_mode_boolean: !input home_mode_boolean
-  guest_mode: "{{ states(input('guest_mode_toggle')) == 'on' }}"
-  is_home: "{{ is_state(input('presence_sensor'), 'on') }}"
-
-triggers:
-  - trigger: state
-    entity_id: !input presence_sensor
-  - trigger: mqtt
-    topic: !input mqtt_topic
-    payload: !input payload_click
-    id: "mqtt_click"
-  - trigger: mqtt
-    topic: !input mqtt_topic
-    payload: !input payload_hold
-    id: "mqtt_hold"
+trigger:
+  - platform: state
+  entity_id: !input presence_sensor
+  - platform: mqtt
+  topic: !input mqtt_topic
+  payload: !input payload_click
+  id: "mqtt_click"
+  - platform: mqtt
+  topic: !input mqtt_topic
+  payload: !input payload_hold
+  id: "mqtt_hold"
 
 condition: []
 
-actions:
+action:
   - choose:
       # OPTION 1: Set AWAY mode (manual or automatic).
       - conditions:
           - condition: or
             conditions:
-              # Condition A: Manual away via hold, ONLY if guest mode is on.
+              # Condition A: Manual away via HOLD, ONLY if guest mode is ON.
               - condition: and
                 conditions:
                   - condition: trigger
                     id: "mqtt_hold"
-                  - "{{ guest_mode }}"
-              # Condition B: Automatic away when sensor is off and guest mode is off.
-              - "{{ not is_home and not guest_mode }}"
+                  # FIX 2: Template conditions must be wrapped in a 'condition: template' block.
+                  # This checks if the guest mode toggle is 'on'.
+                  - condition: template
+                    value_template: "{{ is_state(!input guest_mode_toggle, 'on') }}"
+
+              # Condition B: Automatic away when sensor is OFF and guest mode is OFF.
+              - condition: and
+                conditions:
+                  - condition: template
+                    value_template: "{{ is_state(!input presence_sensor, 'off') }}"
+                  - condition: template
+                    value_template: "{{ is_state(!input guest_mode_toggle, 'off') }}"
         sequence:
           - service: input_boolean.turn_off
             target:
               entity_id: !input home_mode_boolean
 
       # OPTION 2: Set HOME mode.
-      # Happens if presence sensor is 'on' OR if guest confirmation click is received WHILE guest mode is on.
+      # Happens if presence sensor is ON OR if a manual CLICK happens while guest mode is ON.
       - conditions:
-          - "{{ is_home or (trigger.id == 'mqtt_click' and guest_mode) }}"
+          # FIX 2 (cont.): This combines the home conditions into a single template.
+          - condition: template
+            value_template: >-
+              {{ is_state(!input presence_sensor, 'on') or
+                 (trigger.id == 'mqtt_click' and is_state(!input guest_mode_toggle, 'on')) }}
         sequence:
           - service: input_boolean.turn_on
             target:
