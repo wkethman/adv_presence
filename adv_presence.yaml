@@ -1,5 +1,5 @@
 blueprint:
-  name: Advanced Presence Control with MQTT Button
+  name: Advanced presence control with MQTT button
   author: wkethman
   description: >-
     Automates home/away modes based on a binary_sensor. Includes a guest mode
