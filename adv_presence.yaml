@@ -70,8 +70,6 @@ action:
                 conditions:
                   - condition: trigger
                     id: "mqtt_hold"
-                  # FIX 2: Template conditions must be wrapped in a 'condition: template' block.
-                  # This checks if the guest mode toggle is 'on'.
                   - condition: template
                     value_template: "{{ is_state(!input guest_mode_toggle, 'on') }}"
 
@@ -90,7 +88,6 @@ action:
       # OPTION 2: Set HOME mode.
       # Happens if presence sensor is ON OR if a manual CLICK happens while guest mode is ON.
       - conditions:
-          # FIX 2 (cont.): This combines the home conditions into a single template.
           - condition: template
             value_template: >-
               {{ is_state(!input presence_sensor, 'on') or
