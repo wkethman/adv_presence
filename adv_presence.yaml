@@ -47,15 +47,15 @@ blueprint:
 
 trigger:
   - platform: state
-  entity_id: !input presence_sensor
+    entity_id: !input presence_sensor
   - platform: mqtt
-  topic: !input mqtt_topic
-  payload: !input payload_click
-  id: "mqtt_click"
+    topic: !input mqtt_topic
+    payload: !input payload_click
+    id: "mqtt_click"
   - platform: mqtt
-  topic: !input mqtt_topic
-  payload: !input payload_hold
-  id: "mqtt_hold"
+    topic: !input mqtt_topic
+    payload: !input payload_hold
+    id: "mqtt_hold"
 
 condition: []
 
