@@ -52,9 +52,6 @@ variables:
 trigger:
   - platform: state
     entity_id: !input presence_sensor
-    to:
-      - "on"
-      - "off"
   - platform: mqtt
     topic: !input mqtt_topic
     payload: !input payload_click
