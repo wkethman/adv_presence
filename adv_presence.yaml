@@ -6,7 +6,6 @@ blueprint:
     that activates an MQTT button (single press for home, hold for away). 
     An input_boolean reflects the current state (on=Home, off=Away).
   domain: automation
-  mode: single
   input:
     presence_sensor:
       name: Presence Sensor
