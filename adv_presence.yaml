@@ -1,11 +1,11 @@
 blueprint:
   name: Advanced Presence Control with MQTT Button
+  author: wkethman
   description: >-
     Automates home/away modes based on a binary_sensor. Includes a guest mode 
     that activates an MQTT button (single press for home, hold for away). 
     An input_boolean reflects the current state (on=Home, off=Away).
   domain: automation
-  source_url: https://github.com/wkethman/adv_presence/edit/main/adv_presence.yaml
   input:
     presence_sensor:
       name: Presence Sensor
@@ -49,23 +49,22 @@ variables:
   guest_mode: "{{ states(input('guest_mode_toggle')) == 'on' }}"
   is_home: "{{ is_state(input('presence_sensor'), 'on') }}"
 
-trigger:
-  - platform: state
+triggers:
+  - trigger: state
     entity_id: !input presence_sensor
-  - platform: mqtt
+  - trigger: mqtt
     topic: !input mqtt_topic
     payload: !input payload_click
     id: "mqtt_click"
-  - platform: mqtt
+  - trigger: mqtt
     topic: !input mqtt_topic
     payload: !input payload_hold
     id: "mqtt_hold"
 
 condition: []
 
-action:
+actions:
   - choose:
-    
       # OPTION 1: Set AWAY mode (manual or automatic).
       - conditions:
           - condition: or
