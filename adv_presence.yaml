@@ -45,53 +45,53 @@ blueprint:
       selector:
         text:
 
-  trigger:
-    - platform: state
-      entity_id: !input presence_sensor
-    - platform: mqtt
-      topic: !input mqtt_topic
-      payload: !input payload_click
-      id: "mqtt_click"
-    - platform: mqtt
-      topic: !input mqtt_topic
-      payload: !input payload_hold
-      id: "mqtt_hold"
-  
-  condition: []
-  
-  action:
-    - choose:
-        # OPTION 1: Set AWAY mode (manual or automatic).
-        - conditions:
-            - condition: or
-              conditions:
-                # Condition A: Manual away via HOLD, ONLY if guest mode is ON.
-                - condition: and
-                  conditions:
-                    - condition: trigger
-                      id: "mqtt_hold"
-                    - condition: template
-                      value_template: "{{ is_state(!input guest_mode_toggle, 'on') }}"
-  
-                # Condition B: Automatic away when sensor is OFF and guest mode is OFF.
-                - condition: and
-                  conditions:
-                    - condition: template
-                      value_template: "{{ is_state(!input presence_sensor, 'off') }}"
-                    - condition: template
-                      value_template: "{{ is_state(!input guest_mode_toggle, 'off') }}"
-          sequence:
-            - service: input_boolean.turn_off
-              target:
-                entity_id: !input home_mode_boolean
-  
-        # OPTION 2: Set HOME mode.
-        # Happens if presence sensor is ON OR if a manual CLICK happens while guest mode is ON.
-        - conditions:
-            - condition: template
-              value_template: >-
-                {{ is_state(!input presence_sensor, 'on') or
-                   (trigger.id == 'mqtt_click' and is_state(!input guest_mode_toggle, 'on')) }}
+trigger:
+  - platform: state
+    entity_id: !input presence_sensor
+  - platform: mqtt
+    topic: !input mqtt_topic
+    payload: !input payload_click
+    id: "mqtt_click"
+  - platform: mqtt
+    topic: !input mqtt_topic
+    payload: !input payload_hold
+    id: "mqtt_hold"
+
+condition: []
+
+action:
+  - choose:
+      # OPTION 1: Set AWAY mode (manual or automatic).
+      - conditions:
+          - condition: or
+            conditions:
+              # Condition A: Manual away via HOLD, ONLY if guest mode is ON.
+              - condition: and
+                conditions:
+                  - condition: trigger
+                    id: "mqtt_hold"
+                  - condition: template
+                    value_template: "{{ is_state(!input guest_mode_toggle, 'on') }}"
+
+              # Condition B: Automatic away when sensor is OFF and guest mode is OFF.
+              - condition: and
+                conditions:
+                  - condition: template
+                    value_template: "{{ is_state(!input presence_sensor, 'off') }}"
+                  - condition: template
+                    value_template: "{{ is_state(!input guest_mode_toggle, 'off') }}"
+        sequence:
+          - service: input_boolean.turn_off
+            target:
+              entity_id: !input home_mode_boolean
+
+      # OPTION 2: Set HOME mode.
+      # Happens if presence sensor is ON OR if a manual CLICK happens while guest mode is ON.
+      - conditions:
+          - condition: template
+            value_template: >-
+              {{ is_state(!input presence_sensor, 'on') or
+                 (trigger.id == 'mqtt_click' and is_state(!input guest_mode_toggle, 'on')) }}
           sequence:
             - service: input_boolean.turn_on
               target:
