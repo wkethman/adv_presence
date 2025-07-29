@@ -6,8 +6,6 @@ blueprint:
     that activates an MQTT button (single press for home, hold for away).
     An input_boolean reflects the current state (on=Home, off=Away).
   domain: automation
-  mode: single
-
   input:
     presence_sensor:
       name: Presence Sensor
@@ -46,6 +44,8 @@ blueprint:
       selector:
         text:
 
+mode: single
+
 trigger:
   - platform: state
     entity_id: !input presence_sensor
@@ -58,9 +58,6 @@ trigger:
     payload: !input payload_hold
     id: "mqtt_hold"
 
-# FIX: The '!input' tag cannot be used inside a '{{ }}' template.
-# Instead, we define variables here to hold the entity IDs from the inputs.
-# These variables can then be used safely inside the templates below.
 variables:
   guest_mode_toggle: !input guest_mode_toggle
   presence_sensor: !input presence_sensor
