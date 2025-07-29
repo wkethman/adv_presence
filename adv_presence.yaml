@@ -89,8 +89,7 @@ action:
       # Happens if presence sensor is ON OR if a manual CLICK happens while guest mode is ON.
       - conditions:
           - condition: template
-            value_template: >-
-              {{ is_state(!input presence_sensor, 'on') or (trigger.id == 'mqtt_click' and is_state(!input guest_mode_toggle, 'on')) }}
+            value_template: "{{ is_state(!input presence_sensor, 'on') or (trigger.id == 'mqtt_click' and is_state(!input guest_mode_toggle, 'on')) }}"
           sequence:
             - service: input_boolean.turn_on
               target:
