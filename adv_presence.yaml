@@ -1,3 +1,4 @@
+mode: single
 blueprint:
   name: Advanced Presence Control with MQTT Button
   author: wkethman
